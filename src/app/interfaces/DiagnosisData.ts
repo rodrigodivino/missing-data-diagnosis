@@ -1,7 +1,7 @@
 export type DiagnosisData = DiagnosisDatum[];
 
 export type DiagnosisDatum = {
-  dependent: string;
-  indpendent: string;
+  missingVariable: string;
+  dependentVariable: string;
   factor: number;
 };

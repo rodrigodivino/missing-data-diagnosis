@@ -5,6 +5,8 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
+import { ScaleBand, scaleBand, scaleLinear } from 'd3-scale';
+import { DiagnosisData, DiagnosisDatum } from '../interfaces/DiagnosisData';
 import { InputData } from '../interfaces/InputData';
 import { DiagnosisRunnerService } from '../services/diagnosis-runner.service';
 import testData from '../services/testData';
@@ -16,25 +18,71 @@ import testData from '../services/testData';
   providers: [DiagnosisRunnerService],
 })
 export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
-  @Input() data: InputData = testData;
-  @Input() fullWidth: number;
-  @Input() fullHeight: number;
-
   public readonly margin = { top: 5, left: 20, right: 20, bottom: 5 };
-  public innerWidth: number;
+
+  @Input() public data: InputData = testData;
+  @Input() public fullHeight: number;
+  @Input() public fullWidth: number;
+
+  public diagnosisData: DiagnosisData;
   public innerHeight: number;
+  public innerWidth: number;
+  public xScale: ScaleBand<string>;
+  public yScale: ScaleBand<string>;
+  public colorScale = scaleLinear<string, string>()
+    .domain([0, 1])
+    .range(['steelblue', 'mediumseagreen']);
 
   constructor(private diagnosisRunner: DiagnosisRunnerService) {}
-  ngOnChanges(changes: SimpleChanges): void {
+
+  public diagnosisId(diagnosisDatum: DiagnosisDatum): string {
+    return diagnosisDatum.missingVariable + diagnosisDatum.dependentVariable;
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
     if (changes.fullWidth) {
       this.innerWidth = this.fullWidth - this.margin.left - this.margin.right;
+      this.resizeScales();
     }
     if (changes.fullHeight) {
       this.innerHeight = this.fullHeight - this.margin.top - this.margin.bottom;
+      this.resizeScales();
     }
   }
 
-  ngOnInit(): void {
-    console.log(this.diagnosisRunner.diagnoseAll(this.data, () => {}));
+  public ngOnInit(): void {
+    this.diagnosisData = this.diagnosisRunner.stateStructure(this.data);
+    this.initializeScales();
+
+    this.diagnosisRunner.newDiagnosis.subscribe((newDiagnosisDatum) => {
+      this.diagnosisData = [
+        ...this.diagnosisData.filter(
+          (diagnosisDatum) =>
+            this.diagnosisId(diagnosisDatum) !==
+            this.diagnosisId(newDiagnosisDatum)
+        ),
+        newDiagnosisDatum,
+      ];
+    });
+    this.diagnosisRunner.diagnoseAll(this.data);
+  }
+
+  private computeScales(): void {
+    this.yScale = scaleBand()
+      .domain([...new Set(this.diagnosisData.map((d) => d.missingVariable))])
+      .padding(0.1);
+    this.xScale = scaleBand()
+      .domain([...new Set(this.diagnosisData.map((d) => d.dependentVariable))])
+      .padding(0.1);
+  }
+
+  private initializeScales(): void {
+    this.computeScales();
+    this.resizeScales();
+  }
+
+  private resizeScales(): void {
+    this.xScale?.range([0, this.innerWidth]);
+    this.yScale?.range([0, this.innerHeight]);
   }
 }
