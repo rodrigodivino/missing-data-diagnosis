@@ -121,8 +121,13 @@
               "devServerTarget": "missing-diagnosis-v3:serve:production"
             }
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy",
+          "options": {}
         }
       }
-    }},
+    }
+  },
   "defaultProject": "missing-diagnosis-v3"
 }
