@@ -1,3 +1,8 @@
 <svg>
-  <rect [attr.width]="fullWidth" [attr.height]="fullHeight"></rect>
+  <rect
+    class="background"
+    [attr.width]="fullWidth"
+    [attr.height]="fullHeight"
+  ></rect>
+  <g [attr.transform]="'translate(' + margin.left + ',' + margin.top + ')'"></g>
 </svg>
