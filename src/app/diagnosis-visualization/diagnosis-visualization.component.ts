@@ -5,7 +5,7 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { max } from 'd3';
+import { max, mean } from 'd3';
 import { ScaleBand, scaleBand, scaleLinear } from 'd3-scale';
 import { DiagnosisData, DiagnosisDatum } from '../interfaces/DiagnosisData';
 import { InputData } from '../interfaces/InputData';
@@ -30,17 +30,25 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
   public innerWidth: number;
   public xScale: ScaleBand<string>;
   public yScale: ScaleBand<string>;
-  public colorScale = scaleLinear<string, string>()
-    .domain([0, 1])
-    .range(['steelblue', 'mediumseagreen']);
+  public colorGradient = scaleLinear<string, string>()
+    .domain([0.025, 0.5, 0.975])
+    .range(['coral', 'seashell', 'coral']);
 
   constructor(private diagnosisRunner: DiagnosisRunnerService) {}
 
+  public colorScale(n: number) {
+    if (
+      n < this.colorGradient.domain()[0] ||
+      n > this.colorGradient.domain()[1]
+    )
+      return 'firebrick';
+    return this.colorGradient(n);
+  }
   public fillColor(item: DiagnosisDatum) {
     if (!item.quantileComparison) return 'lightgray';
 
-    return this.colorScale(
-      max(Object.values(item.quantileComparison).map((c) => c.p))
+    return this.colorGradient(
+      mean(Object.values(item.quantileComparison).map((c) => c.p))
     );
   }
   public diagnosisId(diagnosisDatum: DiagnosisDatum): string {

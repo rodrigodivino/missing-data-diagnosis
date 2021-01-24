@@ -5,7 +5,7 @@ export default interface QuantileComparisonDatum {
    * @description How many bootstrapped numbers are smaller or equal the sequence number. Normalized from 0 to 1
    */
   p: number;
-  bootLo95: number;
+  bootLo: number;
   bootAvg: number;
-  bootHi95: number;
+  bootHi: number;
 }

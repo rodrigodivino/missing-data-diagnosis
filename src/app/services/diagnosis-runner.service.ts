@@ -1,6 +1,6 @@
 import { sequence } from '@angular/animations';
 import { Injectable } from '@angular/core';
-import { ascending, bisect, mean, quantile } from 'd3';
+import { ascending, bisect, bisectLeft, mean, quantile } from 'd3';
 import { Observable, Subject } from 'rxjs';
 import { sample } from 'underscore';
 import { DiagnosisData, DiagnosisDatum } from '../interfaces/DiagnosisData';
@@ -45,7 +45,7 @@ export class DiagnosisRunnerService {
   ): Promise<QuantileComparison> {
     const maskedSequence = sequence.filter((d, i) => mask[i]);
 
-    const resampleQuantiles = this.bootstrapQuantileCount(sequence, mask, 100);
+    const resampleQuantiles = this.bootstrapQuantileCount(sequence, mask, 1000);
     const sequenceQuantiles = this.countQuantiles(maskedSequence);
     console.log('maskedSequence', maskedSequence);
     const comparison = this.compareQuantiles(
@@ -62,22 +62,23 @@ export class DiagnosisRunnerService {
     const quantileComparison = { miss: {} } as QuantileComparison;
     const missArray = resampleQuantiles.map((d) => d.miss).sort(ascending);
     quantileComparison.miss.seq = sequenceQuantiles.miss;
-    quantileComparison.miss.bootLo95 = quantile(missArray, 0.05);
+    quantileComparison.miss.bootLo = quantile(missArray, 0.025);
     quantileComparison.miss.bootAvg = mean(missArray);
-    quantileComparison.miss.bootHi95 = quantile(missArray, 0.95);
+    quantileComparison.miss.bootHi = quantile(missArray, 0.975);
     quantileComparison.miss.p =
-      bisect(missArray, sequenceQuantiles.miss) / resampleQuantiles.length;
+      bisectLeft(missArray, sequenceQuantiles.miss) / resampleQuantiles.length;
 
     for (let i = 1; i <= 10; i++) {
       const qArray = resampleQuantiles.map((d) => d[`q${i}`]).sort(ascending);
       const quantileComparisonDatum = {} as QuantileComparisonDatum;
 
       quantileComparisonDatum.seq = sequenceQuantiles[`q${i}`];
-      quantileComparisonDatum.bootLo95 = quantile(qArray, 0.05);
+      quantileComparisonDatum.bootLo = quantile(qArray, 0.025); // Performance: This can be null, and computed on-demand
       quantileComparisonDatum.bootAvg = mean(qArray);
-      quantileComparisonDatum.bootHi95 = quantile(qArray, 0.95);
+      quantileComparisonDatum.bootHi = quantile(qArray, 0.975);
       quantileComparisonDatum.p =
-        bisect(qArray, sequenceQuantiles[`q${i}`]) / resampleQuantiles.length;
+        bisectLeft(qArray, sequenceQuantiles[`q${i}`]) / // This could be linear if the above is true, by counting
+        resampleQuantiles.length;
 
       quantileComparison[`q${i}`] = quantileComparisonDatum;
     }
@@ -91,7 +92,11 @@ export class DiagnosisRunnerService {
       miss: array.filter((d) => d === null).length,
     } as QuantileCount;
     for (let i = 1; i <= 10; i++) {
-      quantileDatum[`q${i}`] = quantile(array, i * 0.1) ?? null;
+      quantileDatum[`q${i}`] =
+        quantile(
+          array.filter((n) => n !== null),
+          i * 0.1
+        ) ?? null;
     }
     return quantileDatum;
   }
