@@ -5,6 +5,7 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
+import { max } from 'd3';
 import { ScaleBand, scaleBand, scaleLinear } from 'd3-scale';
 import { DiagnosisData, DiagnosisDatum } from '../interfaces/DiagnosisData';
 import { InputData } from '../interfaces/InputData';
@@ -35,6 +36,13 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
 
   constructor(private diagnosisRunner: DiagnosisRunnerService) {}
 
+  public fillColor(item: DiagnosisDatum) {
+    if (!item.quantileComparison) return 'lightgray';
+
+    return this.colorScale(
+      max(Object.values(item.quantileComparison).map((c) => c.p))
+    );
+  }
   public diagnosisId(diagnosisDatum: DiagnosisDatum): string {
     return diagnosisDatum.missingVariable + diagnosisDatum.dependentVariable;
   }

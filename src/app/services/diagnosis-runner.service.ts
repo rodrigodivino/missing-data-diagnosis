@@ -1,8 +1,13 @@
-import { KeyValue } from '@angular/common';
+import { sequence } from '@angular/animations';
 import { Injectable } from '@angular/core';
+import { ascending, bisect, mean, quantile } from 'd3';
 import { Observable, Subject } from 'rxjs';
+import { sample } from 'underscore';
 import { DiagnosisData, DiagnosisDatum } from '../interfaces/DiagnosisData';
 import { InputData } from '../interfaces/InputData';
+import QuantileComparison from '../interfaces/QuantileComparison';
+import QuantileComparisonDatum from '../interfaces/QuantileComparisonDatum';
+import QuantileCount from '../interfaces/QuantileCount';
 
 function timeout(ms): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -13,13 +18,82 @@ function timeout(ms): Promise<void> {
 })
 export class DiagnosisRunnerService {
   private onNewDiagnosis$ = new Subject<DiagnosisDatum>();
-  public async diagnose(sequence: number[], mask: boolean[]): Promise<number> {
-    await timeout(2000);
-    return 1;
-  }
+
+  constructor() {}
 
   public get newDiagnosis(): Observable<DiagnosisDatum> {
     return this.onNewDiagnosis$.asObservable();
+  }
+
+  private bootstrapQuantileCount(
+    sequence: number[],
+    mask: boolean[],
+    iterations: number
+  ): QuantileCount[] {
+    const resampleQuantiles = [];
+    for (let i = 0; i < iterations; i++) {
+      const resample = sample(sequence, mask.filter((d) => d).length).sort(
+        ascending
+      );
+      resampleQuantiles.push(this.countQuantiles(resample));
+    }
+    return resampleQuantiles;
+  }
+  public async diagnose(
+    sequence: number[],
+    mask: boolean[]
+  ): Promise<QuantileComparison> {
+    const maskedSequence = sequence.filter((d, i) => mask[i]);
+
+    const resampleQuantiles = this.bootstrapQuantileCount(sequence, mask, 100);
+    const sequenceQuantiles = this.countQuantiles(maskedSequence);
+    console.log('maskedSequence', maskedSequence);
+    const comparison = this.compareQuantiles(
+      sequenceQuantiles,
+      resampleQuantiles
+    );
+    console.log('comparison', comparison);
+    return comparison;
+  }
+  private compareQuantiles(
+    sequenceQuantiles: QuantileCount,
+    resampleQuantiles: QuantileCount[]
+  ): QuantileComparison {
+    const quantileComparison = { miss: {} } as QuantileComparison;
+    const missArray = resampleQuantiles.map((d) => d.miss).sort(ascending);
+    quantileComparison.miss.seq = sequenceQuantiles.miss;
+    quantileComparison.miss.bootLo95 = quantile(missArray, 0.05);
+    quantileComparison.miss.bootAvg = mean(missArray);
+    quantileComparison.miss.bootHi95 = quantile(missArray, 0.95);
+    quantileComparison.miss.p =
+      bisect(missArray, sequenceQuantiles.miss) / resampleQuantiles.length;
+
+    for (let i = 1; i <= 10; i++) {
+      const qArray = resampleQuantiles.map((d) => d[`q${i}`]).sort(ascending);
+      const quantileComparisonDatum = {} as QuantileComparisonDatum;
+
+      quantileComparisonDatum.seq = sequenceQuantiles[`q${i}`];
+      quantileComparisonDatum.bootLo95 = quantile(qArray, 0.05);
+      quantileComparisonDatum.bootAvg = mean(qArray);
+      quantileComparisonDatum.bootHi95 = quantile(qArray, 0.95);
+      quantileComparisonDatum.p =
+        bisect(qArray, sequenceQuantiles[`q${i}`]) / resampleQuantiles.length;
+
+      quantileComparison[`q${i}`] = quantileComparisonDatum;
+    }
+
+    return quantileComparison;
+  }
+
+  private countQuantiles(array: number[]): QuantileCount {
+    array.sort(ascending);
+    const quantileDatum: QuantileCount = {
+      miss: array.filter((d) => d === null).length,
+    } as QuantileCount;
+    for (let i = 1; i <= 10; i++) {
+      quantileDatum[`q${i}`] = quantile(array, i * 0.1) ?? null;
+    }
+    return quantileDatum;
   }
 
   public async diagnoseAll(data: InputData): Promise<void> {
@@ -32,11 +106,12 @@ export class DiagnosisRunnerService {
       for (const dependentVariable of dependentVariables) {
         const sequence = data.map((d) => d[dependentVariable]);
         const mask = data.map((d) => d[missingVariable] === null);
-        this.diagnose(sequence, mask).then((factor) => {
+        if (missingVariable === dependentVariable) continue;
+        this.diagnose(sequence, mask).then((quantileComparison) => {
           this.onNewDiagnosis$.next({
             dependentVariable,
             missingVariable,
-            factor,
+            quantileComparison,
           });
         });
       }
@@ -61,5 +136,4 @@ export class DiagnosisRunnerService {
     }
     return state;
   }
-  constructor() {}
 }

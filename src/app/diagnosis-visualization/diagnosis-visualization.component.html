@@ -12,7 +12,7 @@
           [attr.width]="xScale.bandwidth()"
           [attr.y]="yScale(item.missingVariable)"
           [attr.height]="yScale.bandwidth()"
-          [attr.fill]="colorScale(item.factor)"
+          [attr.fill]="fillColor(item)"
         ></rect>
       </g>
     </ng-container>
