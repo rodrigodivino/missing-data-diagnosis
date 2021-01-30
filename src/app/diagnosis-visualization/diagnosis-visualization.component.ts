@@ -26,15 +26,15 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
   @Input() public data: InputData = testData;
   @Input() public fullHeight: number;
   @Input() public fullWidth: number;
-  public keys: string[];
-  public keysWithMissingValues: string[];
+  public keys: string[] = [];
+  public mKeys: string[] = [];
 
   constructor() {}
 
   public keyID(_, key): string {
     return 'key-' + key;
   }
-  public keyWithMissingValuesID(_, key): string {
+  public mKeyID(_, key): string {
     return 'keyWidthMissingValues-' + key;
   }
   public get innerHeight(): number {
@@ -62,7 +62,7 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
   private updateScaleDomain(): void {
     this.createKeys();
     this.xScale = this.xScale?.copy().domain(this.keys);
-    this.yScale = this.yScale?.copy().domain(this.keysWithMissingValues);
+    this.yScale = this.yScale?.copy().domain(this.mKeys);
   }
 
   private updateScaleRange(): void {
@@ -72,8 +72,9 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
 
   private createKeys(): void {
     this.keys = Object.keys(this.data[0]);
-    this.keysWithMissingValues = this.keys.filter((key) => {
+    this.mKeys = this.keys.filter((key) => {
       return this.data.some((datum) => datum[key] === null);
     });
+    console.log('here', this.keys, this.data);
   }
 }

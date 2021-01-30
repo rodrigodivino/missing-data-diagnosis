@@ -1,15 +1,16 @@
 <svg>
   <rect
-    class="background"
-    [attr.width]="fullWidth"
     [attr.height]="fullHeight"
+    [attr.width]="fullWidth"
+    class="background"
   ></rect>
   <g [attr.transform]="'translate(' + margin.left + ',' + margin.top + ')'">
     <ng-container *ngIf="xScale && yScale && innerWidth > 0 && innerHeight > 0">
       <ng-container *ngFor="let key of keys; index as k; trackBy:keyID">
-        <ng-container *ngFor="let mKey of keysWithMissingValues; index as k; trackBy:keyWithMissingValuesID">
+        <ng-container *ngFor="let mKey of mKeys; index as k; trackBy:mKeyID">
           <g [attr.transform]="'translate('+xScale(key)+','+yScale(mKey)+')'">
-            <g app-overview-cell [width]="xScale.bandwidth()" [height]="yScale.bandwidth()"></g>
+            <g [data]="data" [height]="yScale.bandwidth()" [key]="key" [mKey]="mKey" [width]="xScale.bandwidth()"
+               app-overview-cell></g>
           </g>
 
 
