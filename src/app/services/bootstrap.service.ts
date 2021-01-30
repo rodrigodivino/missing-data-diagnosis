@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { BootstrapResult } from '../interfaces/BootstrapResult';
 import { ascending } from 'd3-array';
 import { stableSample } from '../functions/stableSample';
+import { quantile } from 'd3';
 
 @Injectable({
   providedIn: 'root',
@@ -15,38 +16,69 @@ export class BootstrapService {
 
   /**
    * Computes boostrap statistics between a sample and a mask
-   * @param sequence - The sequence of ordinal values
+   * @param unsortedObservations - The sequence of ordinal values
    * @param mask - A mask for boolean variable
    * @returns An Observable for when the bootstrap is finished
    */
   public boot(
-    sequence: number[],
+    unsortedObservations: number[],
     mask: boolean[]
   ): Observable<BootstrapResult> {
-    sequence.sort(ascending);
+    const sortedObservations = unsortedObservations.slice().sort(ascending);
+    const sortedSample = unsortedObservations
+      .filter((_, i) => mask[i])
+      .sort(ascending);
+
     const bootResponse = new Subject<BootstrapResult>();
-    const M = sequence.length;
     const N = mask.filter((m) => m).length;
 
-    for (let i = 0; i < 1; i++) {
-      // TODO: Filter nulls and debug rank sum algorithm
-      const L = M + N;
-      const random = stableSample<number | string>(sequence, N);
-      let randomRankSum = 0;
-      let randomI = 0;
-      let sequenceI = 0;
-      for (let r = 1; r <= L; r++) {
-        if (sequenceI >= M || random[randomI] < sequence[sequenceI]) {
-          randomRankSum += r / L;
-          randomI++;
-          console.log('random: ' + r, random[randomI]);
-        } else {
-          sequenceI++;
-          console.log('sequence: ' + r, sequence[sequenceI]);
-        }
-      }
+    const randomRankSums = [];
+    for (let i = 0; i < 1000; i++) {
+      const random = stableSample<number>(sortedObservations, N);
+      randomRankSums.push(this.rankSum(random, sortedObservations));
     }
+    randomRankSums.sort(ascending);
+
+    const randomRankSumInterval = [
+      quantile(randomRankSums, 0.025),
+      quantile(randomRankSums, 0.975),
+    ];
+
+    console.log('randomRankSumInterval', randomRankSumInterval);
+    console.log(
+      'sampleRankSum',
+      this.rankSum(sortedSample, sortedObservations)
+    );
+
+    // console.log(stableSample<number>(sortedObservations, N), sortedSample);
+    // const result: BootstrapResult = {
+    //   RandomRankSumInterval,
+    // };
 
     return bootResponse.asObservable();
+  }
+
+  private rankSum(subsample: number[], observations: number[]): number {
+    const sequenceNotNull = observations.filter((n) => n !== null);
+    const sampleNotNull = subsample.filter((n) => n !== null);
+
+    const L = sequenceNotNull.length + sampleNotNull.length;
+
+    let sampleRankSum = 0;
+    let sampleI = 0;
+    let sequenceI = 0;
+
+    for (let rank = 1; rank <= L; rank++) {
+      if (
+        sampleNotNull[sampleI] === undefined ||
+        sampleNotNull[sampleI] >= sequenceNotNull[sequenceI]
+      ) {
+        sequenceI++;
+      } else {
+        sampleRankSum += rank / L;
+        sampleI++;
+      }
+    }
+    return sampleRankSum;
   }
 }
