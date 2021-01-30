@@ -6,15 +6,16 @@
   ></rect>
   <g [attr.transform]="'translate(' + margin.left + ',' + margin.top + ')'">
     <ng-container *ngIf="xScale && yScale && innerWidth > 0 && innerHeight > 0">
-      <g *ngFor="let item of diagnosisData; index as i; trackBy: diagnosisId">
-        <rect
-          [attr.x]="xScale(item.dependentVariable)"
-          [attr.width]="xScale.bandwidth()"
-          [attr.y]="yScale(item.missingVariable)"
-          [attr.height]="yScale.bandwidth()"
-          [attr.fill]="fillColor(item)"
-        ></rect>
-      </g>
+      <ng-container *ngFor="let key of keys; index as k; trackBy:keyID">
+        <ng-container *ngFor="let mKey of keysWithMissingValues; index as k; trackBy:keyWithMissingValuesID">
+          <g [attr.transform]="'translate('+xScale(key)+','+yScale(mKey)+')'">
+            <g app-overview-cell [width]="xScale.bandwidth()" [height]="yScale.bandwidth()"></g>
+          </g>
+
+
+        </ng-container>
+
+      </ng-container>
     </ng-container>
   </g>
 </svg>
