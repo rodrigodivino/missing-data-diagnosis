@@ -75,6 +75,5 @@ export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
     this.mKeys = this.keys.filter((key) => {
       return this.data.some((datum) => datum[key] === null);
     });
-    console.log('here', this.keys, this.data);
   }
 }

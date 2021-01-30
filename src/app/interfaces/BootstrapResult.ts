@@ -3,12 +3,28 @@
  */
 export interface BootstrapResult {
   /**
-   * The confidence interval of rank sum of random samples against observation
+   * The confidence interval of rank sum of random subsample against observation
    */
-  RandomRankSumInterval: [number, number];
+  randomRankSumInterval: CI;
 
   /**
-   * The confidence interval of missing data rate of random samples against observation
+   * The rank sum of the testing sample against observation
    */
-  RandomMissRateInterval: [number, number];
+  sampleRankSum: number;
+  /**
+   * The confidence interval of missing data rate of random samples
+   */
+  randomMissRateInterval: CI;
+
+  /**
+   * The missing data rate of the testing sample
+   */
+  sampleMissRate: number;
+}
+
+export interface CI {
+  lo: number;
+  hi: number;
+  min: number;
+  max: number;
 }
