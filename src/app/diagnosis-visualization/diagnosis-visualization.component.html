@@ -1,9 +1,4 @@
 <svg>
-  <rect
-    [attr.height]="fullHeight"
-    [attr.width]="fullWidth"
-    class="background"
-  ></rect>
   <g [attr.transform]="'translate(' + margin.left + ',' + margin.top + ')'">
     <ng-container *ngIf="xScale && yScale && innerWidth > 0 && innerHeight > 0">
       <ng-container *ngFor="let key of keys; index as k; trackBy:keyID">

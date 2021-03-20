@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { BootstrapResult } from '../interfaces/BootstrapResult';
+import { BootstrapResult, CI } from '../interfaces/BootstrapResult';
 import { ascending } from 'd3-array';
 import { stableSample } from '../functions/stableSample';
 import { quantile } from 'd3';
@@ -12,40 +12,29 @@ import { quantile } from 'd3';
  * Responsible for running and parallelling the bootstrap computation
  */
 export class BootstrapService {
+  private static readonly MAX_ITERATIONS = 20000;
+
   constructor() {}
 
-  // TODO: Create a type for bootstrap statistic function and define it once in the class body
-  private static mannWhitneyU(
-    subsample: number[],
-    observations: number[]
+  private static minMaxScaling(
+    floor: number,
+    ceil: number,
+    value: number
   ): number {
-    const observationsNotNull = observations.filter((n) => n !== null);
-    const subsampleNotNull = subsample.filter((n) => n !== null);
-    const N = subsampleNotNull.length;
-    const M = observationsNotNull.length;
+    return (value - floor) / (ceil - floor);
+  }
 
-    const L = M + N;
-
-    let sampleRankSum = 0;
-    let observationsRankSum = 0;
-    let subsampleI = 0;
-    let observationI = 0;
-
-    for (let rank = 1; rank <= L; rank++) {
-      if (
-        subsampleNotNull[subsampleI] === undefined ||
-        subsampleNotNull[subsampleI] >= observationsNotNull[observationI]
-      ) {
-        observationsRankSum += rank;
-        observationI++;
-      } else {
-        sampleRankSum += rank;
-        subsampleI++;
-      }
+  private static calculateDeviationIndex(interval: CI, value: number): number {
+    if (value >= interval.lo && value <= interval.hi) {
+      return 0;
     }
-    const U1 = sampleRankSum - (N * (N + 1)) / 2;
-    const U2 = observationsRankSum - (M * (M + 1)) / 2;
-    return Math.min(U1, U2);
+    if (value <= interval.min || value >= interval.max) {
+      return 1;
+    }
+    if (value < interval.lo) {
+      return BootstrapService.minMaxScaling(interval.lo, interval.min, value);
+    }
+    return BootstrapService.minMaxScaling(interval.hi, interval.max, value);
   }
 
   private static normalizedRankSum(
@@ -94,16 +83,31 @@ export class BootstrapService {
   ): Observable<BootstrapResult> {
     const bootstrapResult = new Subject<BootstrapResult>();
 
-    this.runBoot(unsortedObservations, mask).then((result: BootstrapResult) => {
-      bootstrapResult.next(result);
-    });
+    const handleRunBootResult = (result?: BootstrapResult) => {
+      if (
+        result &&
+        result.randomRankSums.length < BootstrapService.MAX_ITERATIONS
+      ) {
+        bootstrapResult.next(result);
+      }
+      setTimeout(() => {
+        this.runBoot(unsortedObservations, mask, result).then(
+          (newResult: BootstrapResult) => {
+            handleRunBootResult(newResult);
+          }
+        );
+      }, 100);
+    };
+
+    handleRunBootResult();
 
     return bootstrapResult.asObservable();
   }
 
-  private async runBoot(
+  private async runNumericalBoot(
     unsortedObservations: number[],
-    mask: boolean[]
+    mask: boolean[],
+    previousResult?: BootstrapResult
   ): Promise<BootstrapResult> {
     const sortedObservations = unsortedObservations.slice().sort(ascending);
     const sortedSample = unsortedObservations
@@ -112,9 +116,9 @@ export class BootstrapService {
 
     const N = mask.filter((m) => m).length;
 
-    const randomRankSums = [];
-    const randomMissRates = [];
-    for (let i = 0; i < 2000; i++) {
+    const randomRankSums = previousResult?.randomRankSums ?? [];
+    const randomMissRates = previousResult?.randomMissRates ?? [];
+    for (let i = 0; i < 100; i++) {
       const random = stableSample<number>(sortedObservations, N);
       randomRankSums.push(
         BootstrapService.normalizedRankSum(random, sortedObservations)
@@ -140,6 +144,12 @@ export class BootstrapService {
     };
 
     const result: BootstrapResult = {
+      iterations: randomRankSums.length,
+      progress: randomRankSums.length / BootstrapService.MAX_ITERATIONS,
+      randomRankSums,
+      randomMissRates,
+      missRateDeviationIndex: 0,
+      rankSumDeviationIndex: 0,
       randomRankSumInterval,
       randomMissRateInterval,
       sampleMissRate: BootstrapService.countMissRate(sortedSample),
@@ -149,6 +159,43 @@ export class BootstrapService {
       ),
     };
 
+    result.rankSumDeviationIndex = BootstrapService.calculateDeviationIndex(
+      result.randomRankSumInterval,
+      result.sampleRankSum
+    );
+
+    result.missRateDeviationIndex = BootstrapService.calculateDeviationIndex(
+      result.randomMissRateInterval,
+      result.sampleMissRate
+    );
     return result;
+  }
+
+  private async runBoot(
+    unsortedObservations: number[],
+    mask: boolean[],
+    previousResult?: BootstrapResult
+  ): Promise<BootstrapResult> {
+    if (unsortedObservations.some((obs) => isNaN(obs))) {
+      return await this.runCategoricalBoot(
+        unsortedObservations,
+        mask,
+        previousResult
+      );
+    }
+    return await this.runNumericalBoot(
+      unsortedObservations,
+      mask,
+      previousResult
+    );
+  }
+
+  private async runCategoricalBoot(
+    unsortedObservations: number[],
+    mask: boolean[],
+    previousResult: BootstrapResult
+  ): Promise<BootstrapResult> {
+    console.log('here');
+    return undefined;
   }
 }
