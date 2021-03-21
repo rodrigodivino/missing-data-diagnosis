@@ -67,8 +67,38 @@ export class BootstrapService {
     return sampleRankSum;
   }
 
-  private static countMissRate(sample: number[]): number {
+  private static countMissRate(sample: (number | string)[]): number {
     return sample.filter((n) => n === null).length / sample.length;
+  }
+
+  private static getCountRates(
+    observations: string[],
+    categories: string[]
+  ): { [category: string]: number } {
+    const trueRates = {};
+
+    for (const category of categories) {
+      trueRates[category] =
+        observations.filter((d) => d === category).length / observations.length;
+    }
+
+    return trueRates;
+  }
+
+  private static getCategoricalRMSE(
+    benchmarkCountRate: { [category: string]: number },
+    countRate: { [category: string]: number },
+    categories: string[]
+  ): number {
+    let SE = 0;
+    for (const category of categories) {
+      SE +=
+        ((countRate[category] ?? 0 - benchmarkCountRate[category] ?? 0) *
+          100) **
+        2;
+    }
+    const MSE = SE / categories.length;
+    return Math.sqrt(MSE);
   }
 
   /**
@@ -172,30 +202,101 @@ export class BootstrapService {
   }
 
   private async runBoot(
-    unsortedObservations: number[],
+    unsortedObservations: (number | string)[],
     mask: boolean[],
     previousResult?: BootstrapResult
   ): Promise<BootstrapResult> {
-    if (unsortedObservations.some((obs) => isNaN(obs))) {
+    if (unsortedObservations.some((obs: any) => isNaN(obs))) {
       return await this.runCategoricalBoot(
-        unsortedObservations,
+        unsortedObservations as string[],
         mask,
         previousResult
       );
     }
     return await this.runNumericalBoot(
-      unsortedObservations,
+      unsortedObservations as number[],
       mask,
       previousResult
     );
   }
 
   private async runCategoricalBoot(
-    unsortedObservations: number[],
+    observations: string[],
     mask: boolean[],
     previousResult: BootstrapResult
   ): Promise<BootstrapResult> {
-    console.log('here');
-    return undefined;
+    const N = mask.filter((m) => m).length;
+
+    const sample = observations.filter((d, i) => mask[i]);
+    const categories = [...new Set(observations)];
+
+    const trueRates = BootstrapService.getCountRates(observations, categories);
+    const sampleRates = BootstrapService.getCountRates(sample, categories);
+
+    const sampleRMSE = BootstrapService.getCategoricalRMSE(
+      trueRates,
+      sampleRates,
+      categories
+    );
+
+    const sampleMissRate = BootstrapService.countMissRate(sample);
+
+    const randomRMSE = previousResult?.randomRankSums ?? [];
+    const randomMissRates = previousResult?.randomMissRates ?? [];
+    for (let i = 0; i < 100; i++) {
+      const random = stableSample<string>(observations, N);
+      const randomCountRates = BootstrapService.getCountRates(
+        random,
+        categories
+      );
+      randomRMSE.push(
+        BootstrapService.getCategoricalRMSE(
+          trueRates,
+          randomCountRates,
+          categories
+        )
+      );
+      randomMissRates.push(BootstrapService.countMissRate(random));
+    }
+    randomRMSE.sort(ascending);
+    randomMissRates.sort(ascending);
+
+    const randomRankSumInterval = {
+      lo: quantile(randomRMSE, 0.025),
+      hi: quantile(randomRMSE, 0.975),
+      min: randomRMSE[0],
+      max: randomRMSE[randomRMSE.length - 1],
+    };
+
+    const randomMissRateInterval = {
+      lo: quantile(randomMissRates, 0.025),
+      hi: quantile(randomMissRates, 0.975),
+      min: randomMissRates[0],
+      max: randomMissRates[randomMissRates.length - 1],
+    };
+
+    const result: BootstrapResult = {
+      iterations: randomRMSE.length,
+      progress: randomRMSE.length / BootstrapService.MAX_ITERATIONS,
+      randomRankSums: randomRMSE,
+      randomMissRates,
+      missRateDeviationIndex: 0,
+      rankSumDeviationIndex: 0,
+      randomRankSumInterval,
+      randomMissRateInterval,
+      sampleMissRate,
+      sampleRankSum: sampleRMSE,
+    };
+
+    result.rankSumDeviationIndex = BootstrapService.calculateDeviationIndex(
+      result.randomRankSumInterval,
+      result.sampleRankSum
+    );
+
+    result.missRateDeviationIndex = BootstrapService.calculateDeviationIndex(
+      result.randomMissRateInterval,
+      result.sampleMissRate
+    );
+    return result;
   }
 }

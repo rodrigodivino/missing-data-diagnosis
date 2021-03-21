@@ -8,7 +8,8 @@ export default [
       c: getMCAR(),
       d: getMCAR(),
       e: a !== null && a < 50 && Math.random() < 0.5 ? null : getMCAR(),
-      f: getMCAR(),
+      f: a === null ? 'b' : getCategorical(),
+
       // g: Math.random() < 0.2 ? null : Math.random() * 100,
       // h: Math.random() < 0.2 ? null : Math.random() * 100,
       // i: Math.random() < 0.2 ? null : Math.random() * 100,
@@ -23,4 +24,8 @@ export default [
 
 function getMCAR(): number {
   return Math.random() < 0.3 ? null : Math.random() * 100;
+}
+
+function getCategorical(): string {
+  return ['a', 'b', 'c', null][Math.floor(Math.random() * 4)];
 }
