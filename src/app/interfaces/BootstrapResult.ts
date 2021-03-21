@@ -2,24 +2,36 @@
  * The results of a bootstrap computation
  */
 export interface BootstrapResult {
+  /**
+   * The current iteration
+   */
   iterations: number;
+  /**
+   * The % of progress of the computing
+   */
   progress: number;
-  randomRankSums: number[];
+  /**
+   * The accumulated deviation metric (rank sum or RMSE) of previous bootstrap results
+   */
+  randomDeviationMetric: number[];
+  /**
+   * The accumulated missRates of previous bootstrap results
+   */
   randomMissRates: number[];
   /**
-   * The confidence interval of rank sum of random subsample against observation
+   * The confidence interval of the deviation metric (rank sum or RMSE) of random subsample against observation
    */
-  randomRankSumInterval: CI;
+  randomDeviationMetricInterval: CI;
 
   /**
-   * The rank sum of the testing sample against observation
+   * The deviation metric (rank sum or RMSE) of the testing sample against observation
    */
-  sampleRankSum: number;
+  sampleDeviationMetric: number;
 
   /**
-   * A number between 0 and 1 that indicates the likelyhood of the sample rankSum being anomalous
+   * A number between 0 and 1 that indicates the likelyhood of the sample deviation metric (rank sum or RMSE) being anomalous
    */
-  rankSumDeviationIndex: number;
+  deviationMetricDeviationIndex: number;
 
   /**
    * The confidence interval of missing data rate of random samples

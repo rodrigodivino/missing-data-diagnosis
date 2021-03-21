@@ -42,7 +42,7 @@ export class OverviewCellComponent implements OnInit, OnChanges {
         .subscribe((result: BootstrapResult) => {
           this.result = result;
           const rankSumDeviationColor = interpolateBlues(
-            result.rankSumDeviationIndex
+            result.deviationMetricDeviationIndex
           );
           const missRateDeviationColor = interpolateBlues(
             result.missRateDeviationIndex
