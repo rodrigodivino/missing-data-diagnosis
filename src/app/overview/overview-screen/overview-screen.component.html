@@ -1,9 +1,20 @@
-<svg:g xmlns:svg="http://www.w3.org/2000/svg">
+<svg:g class="overview-screen" xmlns:svg="http://www.w3.org/2000/svg">
   <ng-container *ngFor="let cell of overviewCells; index as k; trackBy:trackCell">
     <g [attr.transform]="'translate('+cell.x+','+cell.y+')'">
       <g [data]="data" [height]="cell.height" [key]="cell.key" [mKey]="cell.mKey" [width]="cell.width"
          app-overview-cell></g>
     </g>
   </ng-container>
+  <ng-container *ngFor="let mKeyLabel of mKeyLabels; index as i; trackBy:trackLabel">
+    <g [attr.transform]="'translate('+mKeyLabel.x+','+mKeyLabel.y+')'">
+      <text class="overview-screen__mKeyLabel" text-anchor="end">Label is {{mKeyLabel.text}}</text>
+    </g>
+  </ng-container>
+  <ng-container *ngFor="let keyLabel of keyLabels; index as i; trackBy:trackLabel">
+    <g  [attr.transform]="'translate('+keyLabel.x+','+keyLabel.y+')rotate(-45)'">
+      <text class="overview-screen__keyLabel" alignment-baseline="baseline">Label is {{keyLabel.text}}</text>
+    </g>
+  </ng-container>
+
 </svg:g>
 

@@ -19,7 +19,7 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class DiagnosisVisualizationComponent
   implements OnInit, OnChanges, OnDestroy {
-  readonly margin = { top: 5, left: 20, right: 20, bottom: 5 };
+  readonly margin = { top: 100, left: 100, right: 20, bottom: 20 };
 
   @Input() public data: InputData = testData;
   @Input() public fullHeight: number;
@@ -30,8 +30,8 @@ export class DiagnosisVisualizationComponent
   innerHeight: number;
   innerWidth: number;
 
-  private _resize$ = new Subject<{ fullWidth: number; fullHeight: number }>();
-  private _data$ = new Subject<InputData>();
+  private _resize$ = new Subject<void>();
+  private _data$ = new Subject<void>();
   private _destroy$ = new Subject<void>();
 
   constructor() {}
@@ -42,10 +42,7 @@ export class DiagnosisVisualizationComponent
       this.fullWidth &&
       this.fullHeight
     ) {
-      this._resize$.next({
-        fullWidth: this.fullWidth,
-        fullHeight: this.fullHeight,
-      });
+      this._resize$.next();
     }
   }
 
@@ -59,12 +56,10 @@ export class DiagnosisVisualizationComponent
   }
 
   private initialize(): void {
-    this._resize$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(({ fullWidth, fullHeight }) => {
-        this.innerHeight = fullHeight - this.margin.top - this.margin.bottom;
-        this.innerWidth = fullWidth - this.margin.left - this.margin.right;
-      });
+    this._resize$.pipe(takeUntil(this._destroy$)).subscribe(() => {
+      this.innerHeight = this.fullHeight - this.margin.top - this.margin.bottom;
+      this.innerWidth = this.fullWidth - this.margin.left - this.margin.right;
+    });
 
     this._data$.pipe(takeUntil(this._destroy$)).subscribe(() => {
       this.keys = Object.keys(this.data[0]);
@@ -73,10 +68,7 @@ export class DiagnosisVisualizationComponent
       });
     });
 
-    this._data$.next(this.data);
-    this._resize$.next({
-      fullWidth: this.fullWidth,
-      fullHeight: this.fullHeight,
-    });
+    this._data$.next();
+    this._resize$.next();
   }
 }
