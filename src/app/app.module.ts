@@ -4,11 +4,11 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DiagnosisVisualizationComponent } from './diagnosis-visualization/diagnosis-visualization.component';
-import { OverviewCellComponent } from './overview-cell/overview-cell.component';
+import { OverviewModule } from './overview/overview.module';
 
 @NgModule({
-  declarations: [AppComponent, DiagnosisVisualizationComponent, OverviewCellComponent],
-  imports: [BrowserModule, AppRoutingModule],
+  declarations: [AppComponent, DiagnosisVisualizationComponent],
+  imports: [BrowserModule, AppRoutingModule, OverviewModule],
   providers: [],
   bootstrap: [AppComponent],
 })
