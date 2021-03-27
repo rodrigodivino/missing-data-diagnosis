@@ -50,12 +50,7 @@ export class DiagnosisVisualizationComponent
   }
 
   public ngOnInit(): void {
-    this.subscribe();
-    this._data$.next(this.data);
-    this._resize$.next({
-      fullWidth: this.fullWidth,
-      fullHeight: this.fullHeight,
-    });
+    this.initialize();
   }
 
   ngOnDestroy(): void {
@@ -63,7 +58,7 @@ export class DiagnosisVisualizationComponent
     this._destroy$.complete();
   }
 
-  private subscribe(): void {
+  private initialize(): void {
     this._resize$
       .pipe(takeUntil(this._destroy$))
       .subscribe(({ fullWidth, fullHeight }) => {
@@ -76,6 +71,12 @@ export class DiagnosisVisualizationComponent
       this.mKeys = this.keys.filter((key) => {
         return this.data.some((datum) => datum[key] === null);
       });
+    });
+
+    this._data$.next(this.data);
+    this._resize$.next({
+      fullWidth: this.fullWidth,
+      fullHeight: this.fullHeight,
     });
   }
 }
