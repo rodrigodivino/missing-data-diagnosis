@@ -29,7 +29,8 @@ export class DiagnosisVisualizationComponent
   mKeys: string[] = [];
   innerHeight: number;
   innerWidth: number;
-
+  selectedKey: string = null;
+  selectedMKey: string = null;
   private _resize$ = new Subject<void>();
   private _data$ = new Subject<void>();
   private _destroy$ = new Subject<void>();
@@ -55,6 +56,18 @@ export class DiagnosisVisualizationComponent
     this._destroy$.complete();
   }
 
+  handleSelectedKeyChange(selectedKey: string): void {
+    this.selectedKey = selectedKey;
+  }
+
+  handleSelectedMKeyChange(selectedMKey: string): void {
+    this.selectedMKey = selectedMKey;
+  }
+
+  resetKeys(): void {
+    this.selectedKey = null;
+    this.selectedMKey = null;
+  }
   private initialize(): void {
     this._resize$.pipe(takeUntil(this._destroy$)).subscribe(() => {
       this.innerHeight = this.fullHeight - this.margin.top - this.margin.bottom;

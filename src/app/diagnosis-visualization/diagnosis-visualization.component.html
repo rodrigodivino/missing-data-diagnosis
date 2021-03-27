@@ -1,8 +1,29 @@
 <svg>
+  <text *ngIf="selectedMKey || selectedKey"
+        [attr.x]="5" [attr.y]="5" alignment-baseline="hanging">| Variable:
+    <tspan alignment-baseline="hanging" font-weight="700">{{selectedKey ? selectedKey : '*'}}</tspan>
+    | Missing Variable:
+    <tspan alignment-baseline="hanging" font-weight="700">{{selectedMKey ? selectedMKey : '*'}}</tspan>
+    |
+    <tspan (click)="resetKeys()" alignment-baseline="hanging" cursor="pointer" fill='red' font-weight="700"> Click to
+      Reset
+    </tspan>
+    |
+  </text>
   <g [attr.transform]="'translate(' + margin.left + ',' + margin.top + ')'">
     <ng-container *ngIf="innerWidth && innerHeight">
-      <g [data]="data" [height]="innerHeight" [keys]="keys" [mKeys]="mKeys"
+      <g (selectedKeyChange)="handleSelectedKeyChange($event)"
+         (selectedMKeyChange)="handleSelectedMKeyChange($event)" [data]="data"
+         [height]="innerHeight" [keys]="keys" [mKeys]="mKeys"
+         [style.display]=" (selectedKey || selectedMKey) ? 'none' : 'block'"
          [width]="innerWidth" app-overview-screen></g>
+
+
+      <g *ngIf="selectedMKey && !selectedKey" [data]="data"
+         [height]="innerHeight" [keys]="keys" [mKey]="selectedMKey"
+         [width]="innerWidth" app-horizontal-screen></g>
     </ng-container>
   </g>
+
+
 </svg>

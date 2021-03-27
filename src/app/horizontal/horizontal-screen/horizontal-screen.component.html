@@ -1,0 +1,22 @@
+<svg:g class="overview-screen" xmlns:svg="http://www.w3.org/2000/svg">
+
+  <ng-container *ngFor="let column of columns; index as i">
+    <g [attr.transform]="'translate('+column.x+','+column.y+')'">
+      <g [data]="data" [height]="column.height" [key]="column.key" [mKey]="mKey" [width]="column.width"
+         app-column></g>
+    </g>
+  </ng-container>
+
+  <g [attr.transform]="'translate('+mKeyLabel.x+','+mKeyLabel.y+')'">
+    <text (click)="resetMKey()" class="overview-screen__mKeyLabel" cursor="pointer" text-anchor="end">Label
+      is {{mKeyLabel.text}}</text>
+  </g>
+
+  <ng-container *ngFor="let keyLabel of keyLabels; index as i; trackBy:trackLabel">
+    <g [attr.transform]="'translate('+keyLabel.x+','+keyLabel.y+')rotate(-45)'">
+      <text (click)="selectKey(keyLabel)" alignment-baseline="baseline" class="overview-screen__keyLabel"
+            cursor="pointer">Label is {{keyLabel.text}}</text>
+    </g>
+  </ng-container>
+
+</svg:g>

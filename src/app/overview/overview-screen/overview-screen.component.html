@@ -7,12 +7,14 @@
   </ng-container>
   <ng-container *ngFor="let mKeyLabel of mKeyLabels; index as i; trackBy:trackLabel">
     <g [attr.transform]="'translate('+mKeyLabel.x+','+mKeyLabel.y+')'">
-      <text class="overview-screen__mKeyLabel" text-anchor="end">Label is {{mKeyLabel.text}}</text>
+      <text (click)="selectMKey(mKeyLabel)" class="overview-screen__mKeyLabel" cursor="pointer" text-anchor="end">Label
+        is {{mKeyLabel.text}}</text>
     </g>
   </ng-container>
   <ng-container *ngFor="let keyLabel of keyLabels; index as i; trackBy:trackLabel">
-    <g  [attr.transform]="'translate('+keyLabel.x+','+keyLabel.y+')rotate(-45)'">
-      <text class="overview-screen__keyLabel" alignment-baseline="baseline">Label is {{keyLabel.text}}</text>
+    <g [attr.transform]="'translate('+keyLabel.x+','+keyLabel.y+')rotate(-45)'">
+      <text (click)="selectKey(keyLabel)" alignment-baseline="baseline" class="overview-screen__keyLabel"
+            cursor="pointer">Label is {{keyLabel.text}}</text>
     </g>
   </ng-container>
 

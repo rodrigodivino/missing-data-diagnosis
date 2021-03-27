@@ -1,5 +1,6 @@
 import {
   Component,
+  EventEmitter,
   Input,
   OnChanges,
   OnDestroy,
@@ -7,25 +8,24 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { InputData } from '../../interfaces/InputData';
 import { scaleBand, ScaleBand } from 'd3-scale';
+import { InputData } from '../../interfaces/InputData';
+import { OverviewCellView } from '../../overview/interfaces/overview-cell-view.interface';
+import { Label } from '../../interfaces/label.interface';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { OverviewCellView } from '../interfaces/overview-cell-view.interface';
-import { Label } from '../../interfaces/label.interface';
-import { EventEmitter } from '@angular/core';
+import { ColumnView } from '../interfaces/column-view.interface';
 
 @Component({
-  selector: 'g[app-overview-screen]',
-  templateUrl: './overview-screen.component.html',
-  styleUrls: ['./overview-screen.component.scss'],
+  selector: 'g[app-horizontal-screen]',
+  templateUrl: './horizontal-screen.component.html',
+  styleUrls: ['./horizontal-screen.component.scss'],
 })
-export class OverviewScreenComponent implements OnInit, OnChanges, OnDestroy {
+export class HorizontalScreenComponent implements OnInit, OnChanges, OnDestroy {
   public xScale: ScaleBand<string> = scaleBand<string>();
-  public yScale: ScaleBand<string> = scaleBand<string>();
 
   @Input() data: InputData;
-  @Input() mKeys: string[];
+  @Input() mKey: string;
   @Input() keys: string[];
   @Input() width: number;
   @Input() height: number;
@@ -33,10 +33,9 @@ export class OverviewScreenComponent implements OnInit, OnChanges, OnDestroy {
   @Output() selectedMKeyChange = new EventEmitter<string>();
   @Output() selectedKeyChange = new EventEmitter<string>();
 
-  overviewCells: OverviewCellView[] = [];
-  mKeyLabels: Label[] = [];
+  mKeyLabel: Label = null;
   keyLabels: Label[] = [];
-
+  columns: ColumnView[];
   private _destroy$ = new Subject<void>();
   private _keyData$ = new Subject<void>();
   private _resize$ = new Subject<void>();
@@ -69,16 +68,20 @@ export class OverviewScreenComponent implements OnInit, OnChanges, OnDestroy {
     return '' + d.text;
   }
 
-  private populateLabels(): void {
-    this.mKeyLabels = [];
+  resetMKey(): void {
+    this.selectedMKeyChange.next(null);
+  }
 
-    for (const mKey of this.mKeys) {
-      this.mKeyLabels.push({
-        text: mKey,
-        x: -5,
-        y: this.yScale(mKey) + this.yScale.bandwidth() / 2,
-      });
-    }
+  selectKey(keyLabel: Label): void {
+    this.selectedKeyChange.next(keyLabel.text);
+  }
+
+  private populateLabels(): void {
+    this.mKeyLabel = {
+      text: this.mKey,
+      x: -5,
+      y: this.height / 2,
+    };
 
     this.keyLabels = [];
 
@@ -91,51 +94,38 @@ export class OverviewScreenComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private populateOverviewCells(): void {
-    this.overviewCells = [];
+  private populateColumns(): void {
+    this.columns = [];
     for (const key of this.keys) {
-      for (const mKey of this.mKeys) {
-        if (key === mKey) {
-          continue;
-        }
-        this.overviewCells.push({
-          height: this.yScale.bandwidth(),
-          width: this.xScale.bandwidth(),
-          key,
-          mKey,
-          x: this.xScale(key),
-          y: this.yScale(mKey),
-        });
+      if (key === this.mKey) {
+        continue;
       }
+      this.columns.push({
+        height: this.height,
+        width: this.xScale.bandwidth(),
+        key,
+        x: this.xScale(key),
+        y: 0,
+      });
     }
   }
 
   private initialize(): void {
     this._keyData$.pipe(takeUntil(this._destroy$)).subscribe(() => {
       this.xScale = this.xScale?.copy().domain(this.keys);
-      this.yScale = this.yScale?.copy().domain(this.mKeys);
 
-      this.populateOverviewCells();
+      this.populateColumns();
       this.populateLabels();
     });
 
     this._resize$.pipe(takeUntil(this._destroy$)).subscribe(() => {
       this.xScale = this.xScale?.copy()?.range([0, this.width]);
-      this.yScale = this.yScale?.copy()?.range([0, this.height]);
 
-      this.populateOverviewCells();
+      this.populateColumns();
       this.populateLabels();
     });
 
     this._keyData$.next();
     this._resize$.next();
-  }
-
-  selectMKey(mKeyLabel: Label): void {
-    this.selectedMKeyChange.next(mKeyLabel.text);
-  }
-
-  selectKey(keyLabel: Label): void {
-    this.selectedKeyChange.next(keyLabel.text);
   }
 }
