@@ -1,3 +1,5 @@
+import { datum } from '../types/datum';
+
 export type InputData = InputDatum[];
 
-export type InputDatum = { [key: string]: number };
+export type InputDatum = { [key: string]: datum };

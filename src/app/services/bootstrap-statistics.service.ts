@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { datum } from '../types/datum';
 
 @Injectable({
   providedIn: 'root',
@@ -7,8 +8,8 @@ export class BootstrapStatisticsService {
   constructor() {}
 
   public static getMetrics(
-    subsample: (number | string)[],
-    observations: (number | string)[]
+    subsample: datum[],
+    observations: datum[]
   ): [number, number] {
     return [
       BootstrapStatisticsService.autoBootstrapMetric(subsample, observations),
@@ -70,13 +71,13 @@ export class BootstrapStatisticsService {
     return Math.sqrt(MSE);
   }
 
-  private static countMissRate(sample: (number | string)[]): number {
+  private static countMissRate(sample: datum[]): number {
     return sample.filter((n) => n === null).length / sample.length;
   }
 
   private static autoBootstrapMetric(
-    subsample: (number | string)[],
-    observations: (number | string)[]
+    subsample: datum[],
+    observations: datum[]
   ): number {
     if (observations.some((obs: any) => isNaN(obs))) {
       return this.categoricalRMSE(

@@ -5,6 +5,7 @@ import { ascending } from 'd3-array';
 import { stableSample } from '../functions/stableSample';
 import { BootstrapStatisticsService } from './bootstrap-statistics.service';
 import { BootstrapResultBuilder } from './bootstrap-result-builder';
+import { datum } from '../types/datum';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +25,7 @@ export class BootstrapService {
    * @returns An Observable for when the bootstrap is finished
    */
   public boot(
-    unsortedObservations: number[],
+    unsortedObservations: datum[],
     mask: boolean[]
   ): Observable<BootstrapResult> {
     const bootstrapResult = new Subject<BootstrapResult>();
@@ -53,7 +54,7 @@ export class BootstrapService {
   }
 
   private async runBoot(
-    unsortedObservations: (number | string)[],
+    unsortedObservations: datum[],
     mask: boolean[],
     previousResult?: BootstrapResult
   ): Promise<BootstrapResult> {
@@ -73,7 +74,7 @@ export class BootstrapService {
     ] = BootstrapStatisticsService.getMetrics(sortedSample, sortedObservations);
 
     for (let i = 0; i < 100; i++) {
-      const random = stableSample<number | string>(sortedObservations, N);
+      const random = stableSample<datum>(sortedObservations, N);
       const [
         randomDeviationMetric,
         randomMissRate,

@@ -10,6 +10,7 @@ import { BootstrapService } from '../services/bootstrap.service';
 import { BootstrapResult } from '../interfaces/BootstrapResult';
 import { scaleLinear } from 'd3-scale';
 import { easeExp, easeExpIn, easeExpOut, interpolateBlues } from 'd3';
+import { datum } from '../types/datum';
 
 @Component({
   selector: 'g[app-overview-cell]',
@@ -28,15 +29,15 @@ export class OverviewCellComponent implements OnInit, OnChanges {
   rankSumColor: string;
   missRateColor: string;
 
-  private sequence: number[];
+  private sequence: datum[];
   private mask: boolean[];
 
   constructor(private bootstrapService: BootstrapService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.data && this.key && this.mKey && this.data) {
-      this.sequence = this.data.map((datum) => datum[this.key]);
-      this.mask = this.data.map((datum) => datum[this.mKey] === null);
+      this.sequence = this.data.map((d) => d[this.key]);
+      this.mask = this.data.map((d) => d[this.mKey] === null);
       this.bootstrapService
         .boot(this.sequence, this.mask)
         .subscribe((result: BootstrapResult) => {
