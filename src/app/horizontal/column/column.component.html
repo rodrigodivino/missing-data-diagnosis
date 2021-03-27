@@ -1,3 +1,18 @@
 <svg:g class="column" xmlns:svg="http://www.w3.org/2000/svg">
-  <rect [attr.height]="height" [attr.width]="width"></rect>
+  <ng-container *ngFor="let cell of columnCells; index as i">
+    <rect [attr.fill]="cell.color" [attr.height]="cell.height" [attr.width]="width" [attr.y]="cell.y"></rect>
+  </ng-container>
+
+  <ng-container *ngFor="let cell of columnCells; index as i">
+    <rect *ngIf="cell.hasMissing" [attr.fill]="'black'" [attr.height]="cell.height" [attr.width]="width * 0.4"
+          [attr.x]="width*0.3" [attr.y]="cell.y"></rect>
+  </ng-container>
+
+  <ng-container>
+    <rect [attr.height]="coMissingHeight" [attr.width]="width"
+          [attr.y]="height - coMissingHeight + coMissingPadding" fill="slategray"></rect>
+
+    <rect [attr.height]="coMissingHeight * coMissingPercentage" [attr.width]="width"
+          [attr.y]="height - coMissingHeight + coMissingPadding" fill="black"></rect>
+  </ng-container>
 </svg:g>
