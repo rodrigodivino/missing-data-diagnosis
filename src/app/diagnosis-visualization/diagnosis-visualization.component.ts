@@ -2,12 +2,14 @@ import {
   Component,
   Input,
   OnChanges,
+  OnDestroy,
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { ScaleBand, scaleBand, scaleLinear } from 'd3-scale';
 import { InputData } from '../interfaces/InputData';
 import testData from '../services/testData';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-diagnosis-visualization',
@@ -15,65 +17,65 @@ import testData from '../services/testData';
   styleUrls: ['./diagnosis-visualization.component.scss'],
   providers: [],
 })
-export class DiagnosisVisualizationComponent implements OnInit, OnChanges {
-  public readonly margin = { top: 5, left: 20, right: 20, bottom: 5 };
-  public xScale: ScaleBand<string> = scaleBand<string>();
-  public yScale: ScaleBand<string> = scaleBand<string>();
-  public colorGradient = scaleLinear<string, string>()
-    .domain([0.025, 0.5, 0.975])
-    .range(['coral', 'seashell', 'coral']);
+export class DiagnosisVisualizationComponent
+  implements OnInit, OnChanges, OnDestroy {
+  readonly margin = { top: 5, left: 20, right: 20, bottom: 5 };
 
   @Input() public data: InputData = testData;
   @Input() public fullHeight: number;
   @Input() public fullWidth: number;
-  public keys: string[] = [];
-  public mKeys: string[] = [];
+
+  keys: string[] = [];
+  mKeys: string[] = [];
+  innerHeight: number;
+  innerWidth: number;
+
+  private _resize$ = new Subject<{ fullWidth: number; fullHeight: number }>();
+  private _data$ = new Subject<InputData>();
+  private _destroy$ = new Subject<void>();
 
   constructor() {}
 
-  public keyID(_, key): string {
-    return 'key-' + key;
-  }
-  public mKeyID(_, key): string {
-    return 'keyWidthMissingValues-' + key;
-  }
-  public get innerHeight(): number {
-    return this.fullHeight - this.margin.top - this.margin.bottom;
-  }
-
-  public get innerWidth(): number {
-    return this.fullWidth - this.margin.left - this.margin.right;
-  }
-
   public ngOnChanges(changes: SimpleChanges): void {
-    if (changes.data) {
-      this.updateScaleDomain();
-    }
-    if (changes.fullWidth || changes.fullHeight) {
-      this.updateScaleRange();
+    if (
+      (changes.fullWidth || changes.fullHeight) &&
+      this.fullWidth &&
+      this.fullHeight
+    ) {
+      this._resize$.next({
+        fullWidth: this.fullWidth,
+        fullHeight: this.fullHeight,
+      });
     }
   }
 
   public ngOnInit(): void {
-    this.updateScaleDomain();
-    this.updateScaleRange();
+    this.subscribe();
+    this._data$.next(this.data);
+    this._resize$.next({
+      fullWidth: this.fullWidth,
+      fullHeight: this.fullHeight,
+    });
   }
 
-  private updateScaleDomain(): void {
-    this.createKeys();
-    this.xScale = this.xScale?.copy().domain(this.keys);
-    this.yScale = this.yScale?.copy().domain(this.mKeys);
+  ngOnDestroy(): void {
+    this._destroy$.next();
+    this._destroy$.complete();
   }
 
-  private updateScaleRange(): void {
-    this.xScale = this.xScale?.copy()?.range([0, this.innerWidth]);
-    this.yScale = this.yScale?.copy()?.range([0, this.innerHeight]);
-  }
+  private subscribe(): void {
+    this._resize$
+      .pipe(takeUntil(this._destroy$))
+      .subscribe(({ fullWidth, fullHeight }) => {
+        this.innerHeight = fullHeight - this.margin.top - this.margin.bottom;
+        this.innerWidth = fullWidth - this.margin.left - this.margin.right;
+      });
 
-  private createKeys(): void {
-    this.keys = Object.keys(this.data[0]);
-    this.mKeys = this.keys.filter((key) => {
-      return this.data.some((datum) => datum[key] === null);
+    this._data$.pipe(takeUntil(this._destroy$)).subscribe(() => {
+      this.keys = Object.keys(this.data[0]);
+      this.mKeys = this.keys.filter((key) => {
+        return this.data.some((datum) => datum[key] === null);
+      });
     });
   }
 }
