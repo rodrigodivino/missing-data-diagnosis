@@ -1,9 +1,10 @@
 <svg>
   <text *ngIf="selectedMKey || selectedKey"
-        [attr.x]="5" [attr.y]="5" alignment-baseline="hanging">| Variable:
-    <tspan alignment-baseline="hanging" font-weight="700">{{selectedKey ? selectedKey : '*'}}</tspan>
+        [attr.x]="5" [attr.y]="5" alignment-baseline="hanging">
     | Missing Variable:
     <tspan alignment-baseline="hanging" font-weight="700">{{selectedMKey ? selectedMKey : '*'}}</tspan>
+    | Variable:
+    <tspan alignment-baseline="hanging" font-weight="700">{{selectedKey ? selectedKey : '*'}}</tspan>
     |
     <tspan (click)="resetKeys()" alignment-baseline="hanging" cursor="pointer" fill='red' font-weight="700"> Click to
       Reset
@@ -19,11 +20,13 @@
          [width]="innerWidth" app-overview-screen></g>
 
 
-      <g *ngIf="selectedMKey && !selectedKey" [data]="data"
+      <g (selectedKeyChange)="handleSelectedKeyChange($event)" (selectedMKeyChange)="handleSelectedMKeyChange($event)" *ngIf="selectedMKey && !selectedKey"
+         [data]="data"
          [height]="innerHeight" [keys]="keys" [mKey]="selectedMKey"
          [width]="innerWidth" app-by-missing-key-screen></g>
 
-      <g *ngIf="!selectedMKey && selectedKey" [data]="data"
+      <g (selectedKeyChange)="handleSelectedKeyChange($event)" (selectedMKeyChange)="handleSelectedMKeyChange($event)" *ngIf="!selectedMKey && selectedKey"
+         [data]="data"
          [height]="innerHeight" [key]="selectedKey" [mKeys]="mKeys"
          [width]="innerWidth" by-key-screen></g>
     </ng-container>
