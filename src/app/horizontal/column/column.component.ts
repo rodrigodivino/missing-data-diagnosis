@@ -10,11 +10,12 @@ import {
   descending,
   extent,
   interpolateYlGnBu,
-  schemeCategory10,
+  interpolateYlOrBr,
   schemeSet3,
 } from 'd3';
 import { ColumnCellView } from './interfaces/column-cell-view.interface';
 import { scaleLinear } from 'd3-scale';
+import { isCategorical } from '../../services/isCategorical';
 
 @Component({
   selector: 'g[app-column]',
@@ -29,9 +30,7 @@ export class ColumnComponent implements OnInit, OnChanges {
   @Input() public data: InputData;
 
   columnCells: ColumnCellView[];
-  coMissingPadding = 5;
-  coMissingHeight: number;
-  coMissingPercentage: number;
+  private sortedData: InputDatum[];
 
   constructor() {}
 
@@ -41,40 +40,44 @@ export class ColumnComponent implements OnInit, OnChanges {
     if (changes.data && this.data) {
       const cellHeight = this.height / this.data.length;
 
-      const validData = this.data
-        .slice()
-        .filter((d) => d[this.key] !== null)
-        .sort((a, b) => descending(a[this.key], b[this.key]));
+      this.sortedData = this.data.slice().sort((a, b) => {
+        return descending(a[this.key] ?? '', b[this.key] ?? '');
+      });
 
-      this.coMissingHeight =
-        this.height - cellHeight * validData.length - this.coMissingPadding;
-
-      const nullData = this.data.slice().filter((d) => d[this.key] === null);
-      const coMissingData = nullData.filter((d) => d[this.mKey] === null);
-
-      this.coMissingPercentage = coMissingData.length / nullData.length;
-
-      let color: (d: InputDatum) => string = null;
-      if (this.data.some((d) => isNaN(d[this.key] as any))) {
-        const categories = [...new Set(this.data.map((d) => d[this.key]))];
-        const colorScheme = [...schemeSet3];
-        color = (datum) => colorScheme[categories.indexOf(datum[this.key])];
-      } else {
-        const colorScale = scaleLinear<number, number>()
-          .domain(extent(this.data, (d) => d[this.key] as number))
-          .range([0, 1]);
-        color = (datum) =>
-          interpolateYlGnBu(colorScale(datum[this.key] as number));
-      }
-
-      this.columnCells = validData.map((datum, i) => {
+      const color = this.getColorFunction();
+      this.columnCells = this.sortedData.map((datum, i) => {
         return {
           y: i * cellHeight,
-          height: cellHeight + 0.5,
+          height: cellHeight,
           color: color(datum),
           hasMissing: datum[this.mKey] === null,
         };
       });
     }
+  }
+
+  private getColorFunction(): (d: InputDatum) => string {
+    let color: (d: InputDatum) => string;
+    if (isCategorical(this.data, this.key)) {
+      const categories = [...new Set(this.sortedData.map((d) => d[this.key]))];
+      const colorScheme = [...schemeSet3];
+      color = (datum) => {
+        if (datum[this.key] === null) {
+          return 'lightgray';
+        }
+        return colorScheme[categories.indexOf(datum[this.key])];
+      };
+    } else {
+      const colorScale = scaleLinear<number, number>()
+        .domain(extent(this.sortedData, (d) => d[this.key] as number))
+        .range([0, 1]);
+      color = (datum) => {
+        if (datum[this.key] === null) {
+          return 'lightgray';
+        }
+        return interpolateYlOrBr(0.6 * colorScale(datum[this.key] as number));
+      };
+    }
+    return color;
   }
 }
