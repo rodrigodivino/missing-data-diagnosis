@@ -1,0 +1,22 @@
+<svg:g class="overview-screen" xmlns:svg="http://www.w3.org/2000/svg">
+
+  <ng-container *ngFor="let line of lines; index as i">
+    <g [attr.transform]="'translate('+line.x+','+line.y+')'">
+      <g [data]="data" [height]="line.height" [key]="key" [mKey]="line.mKey" [width]="line.width"
+         app-line></g>
+    </g>
+  </ng-container>
+
+  <g [attr.transform]="'translate('+keyLabel.x+','+keyLabel.y+')'">
+    <text (click)="resetKey()" alignment-baseline="baseline" class="overview-screen__mKeyLabel" cursor="pointer">Label
+      is {{keyLabel.text}}</text>
+  </g>
+
+  <ng-container *ngFor="let mKeyLabel of mKeyLabels; index as i; trackBy:trackLabel">
+    <g [attr.transform]="'translate('+mKeyLabel.x+','+mKeyLabel.y+')'">
+      <text (click)="selectMKey(mKeyLabel)" class="overview-screen__keyLabel" cursor="pointer"
+            text-anchor="end">Label is {{mKeyLabel.text}}</text>
+    </g>
+  </ng-container>
+
+</svg:g>

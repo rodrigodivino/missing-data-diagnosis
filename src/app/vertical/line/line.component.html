@@ -1,0 +1,12 @@
+<svg:g class="column" xmlns:svg="http://www.w3.org/2000/svg">
+  <ng-container *ngFor="let cell of lineCells; index as i">
+    <rect [attr.fill]="cell.color"
+          [attr.height]="height" [attr.stroke-width]="0.5" [attr.stroke]="cell.color" [attr.width]="cell.width"
+          [attr.x]="cell.x"></rect>
+  </ng-container>
+
+  <ng-container *ngFor="let cell of lineCells; index as i">
+    <rect *ngIf="cell.hasMissing" [attr.fill]="'#050505'" [attr.height]="height * 0.4" [attr.width]="cell.width"
+          [attr.x]="cell.x" [attr.y]="height*0.3"></rect>
+  </ng-container>
+</svg:g>

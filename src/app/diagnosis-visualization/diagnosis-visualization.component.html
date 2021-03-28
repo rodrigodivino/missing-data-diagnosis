@@ -22,6 +22,10 @@
       <g *ngIf="selectedMKey && !selectedKey" [data]="data"
          [height]="innerHeight" [keys]="keys" [mKey]="selectedMKey"
          [width]="innerWidth" app-horizontal-screen></g>
+
+      <g *ngIf="!selectedMKey && selectedKey" [data]="data"
+         [height]="innerHeight" [key]="selectedKey" [mKeys]="mKeys"
+         [width]="innerWidth" app-vertical-screen></g>
     </ng-container>
   </g>
 
