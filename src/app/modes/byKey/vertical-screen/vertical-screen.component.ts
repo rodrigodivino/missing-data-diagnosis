@@ -9,8 +9,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { scaleBand, ScaleBand } from 'd3-scale';
-import { InputData } from '../../interfaces/InputData';
-import { Label } from '../../interfaces/label.interface';
+import { InputData } from '../../../interfaces/InputData';
+import { Label } from '../../../interfaces/label.interface';
 import { Subject } from 'rxjs';
 import { OverviewCellView } from '../../overview/interfaces/overview-cell-view.interface';
 import { takeUntil } from 'rxjs/operators';

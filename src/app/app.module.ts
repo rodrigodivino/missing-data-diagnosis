@@ -4,9 +4,9 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DiagnosisVisualizationComponent } from './diagnosis-visualization/diagnosis-visualization.component';
-import { OverviewModule } from './overview/overview.module';
-import { HorizontalModule } from './horizontal/horizontal.module';
-import { VerticalModule } from './vertical/vertical.module';
+import { OverviewModule } from './modes/overview/overview.module';
+import { ByMissingKeyModule } from './modes/byMissingKey/by-missing-key.module';
+import { ByKeyModule } from './modes/byKey/by-key.module';
 
 @NgModule({
   declarations: [AppComponent, DiagnosisVisualizationComponent],
@@ -14,8 +14,8 @@ import { VerticalModule } from './vertical/vertical.module';
     BrowserModule,
     AppRoutingModule,
     OverviewModule,
-    HorizontalModule,
-    VerticalModule,
+    ByMissingKeyModule,
+    ByKeyModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

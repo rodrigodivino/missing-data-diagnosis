@@ -5,11 +5,11 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { InputData } from '../../interfaces/InputData';
-import { BootstrapService } from '../../services/bootstrap.service';
-import { BootstrapResult } from '../../interfaces/BootstrapResult';
+import { InputData } from '../../../interfaces/InputData';
+import { BootstrapService } from '../../../services/bootstrap.service';
+import { BootstrapResult } from '../../../interfaces/BootstrapResult';
 import { interpolateRdYlBu, interpolateYlGnBu, interpolateYlOrRd } from 'd3';
-import { datum } from '../../types/datum';
+import { datum } from '../../../types/datum';
 
 @Component({
   selector: 'g[app-overview-cell]',

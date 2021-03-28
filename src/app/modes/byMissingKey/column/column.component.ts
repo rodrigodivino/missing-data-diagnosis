@@ -5,25 +5,31 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { InputData, InputDatum } from '../../interfaces/InputData';
-import { descending, extent, interpolateYlOrBr, schemeSet3 } from 'd3';
-import { isCategorical } from '../../services/isCategorical';
+import { InputData, InputDatum } from '../../../interfaces/InputData';
+import {
+  descending,
+  extent,
+  interpolateYlGnBu,
+  interpolateYlOrBr,
+  schemeSet3,
+} from 'd3';
+import { ColumnCellView } from './interfaces/column-cell-view.interface';
 import { scaleLinear } from 'd3-scale';
-import { LineCellView } from './interfaces/line-cell-view.interface';
+import { isCategorical } from '../../../services/isCategorical';
 
 @Component({
-  selector: 'g[app-line]',
-  templateUrl: './line.component.html',
-  styleUrls: ['./line.component.scss'],
+  selector: 'g[app-column]',
+  templateUrl: './column.component.html',
+  styleUrls: ['./column.component.scss'],
 })
-export class LineComponent implements OnInit, OnChanges {
+export class ColumnComponent implements OnInit, OnChanges {
   @Input() public width: number;
   @Input() public height: number;
   @Input() public key: string;
   @Input() public mKey: string;
   @Input() public data: InputData;
 
-  lineCells: LineCellView[];
+  columnCells: ColumnCellView[];
   private sortedData: InputDatum[];
 
   constructor() {}
@@ -32,17 +38,17 @@ export class LineComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.data && this.data) {
-      const cellWidth = this.width / this.data.length;
+      const cellHeight = this.height / this.data.length;
 
       this.sortedData = this.data.slice().sort((a, b) => {
         return descending(a[this.key] ?? '', b[this.key] ?? '');
       });
 
       const color = this.getColorFunction();
-      this.lineCells = this.sortedData.map((datum, i) => {
+      this.columnCells = this.sortedData.map((datum, i) => {
         return {
-          x: this.width - cellWidth - i * cellWidth,
-          width: cellWidth,
+          y: i * cellHeight,
+          height: cellHeight,
           color: color(datum),
           hasMissing: datum[this.mKey] === null,
         };

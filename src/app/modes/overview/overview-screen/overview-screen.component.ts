@@ -7,12 +7,12 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { InputData } from '../../interfaces/InputData';
+import { InputData } from '../../../interfaces/InputData';
 import { scaleBand, ScaleBand } from 'd3-scale';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { OverviewCellView } from '../interfaces/overview-cell-view.interface';
-import { Label } from '../../interfaces/label.interface';
+import { Label } from '../../../interfaces/label.interface';
 import { EventEmitter } from '@angular/core';
 
 @Component({

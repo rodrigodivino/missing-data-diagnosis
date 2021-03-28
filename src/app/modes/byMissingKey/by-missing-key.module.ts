@@ -8,4 +8,4 @@ import { ColumnComponent } from './column/column.component';
   imports: [CommonModule],
   exports: [HorizontalScreenComponent, ColumnComponent],
 })
-export class HorizontalModule {}
+export class ByMissingKeyModule {}

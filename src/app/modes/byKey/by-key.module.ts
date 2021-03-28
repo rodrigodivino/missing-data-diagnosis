@@ -8,4 +8,4 @@ import { LineComponent } from './line/line.component';
   imports: [CommonModule],
   exports: [VerticalScreenComponent],
 })
-export class VerticalModule {}
+export class ByKeyModule {}
