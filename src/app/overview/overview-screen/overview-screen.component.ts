@@ -21,8 +21,8 @@ import { EventEmitter } from '@angular/core';
   styleUrls: ['./overview-screen.component.scss'],
 })
 export class OverviewScreenComponent implements OnInit, OnChanges, OnDestroy {
-  public xScale: ScaleBand<string> = scaleBand<string>();
-  public yScale: ScaleBand<string> = scaleBand<string>();
+  public xScale: ScaleBand<string> = scaleBand<string>().padding(0.05);
+  public yScale: ScaleBand<string> = scaleBand<string>().padding(0.05);
 
   @Input() data: InputData;
   @Input() mKeys: string[];

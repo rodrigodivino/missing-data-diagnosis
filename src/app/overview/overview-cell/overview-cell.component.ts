@@ -8,8 +8,7 @@ import {
 import { InputData } from '../../interfaces/InputData';
 import { BootstrapService } from '../../services/bootstrap.service';
 import { BootstrapResult } from '../../interfaces/BootstrapResult';
-import { scaleLinear } from 'd3-scale';
-import { easeExp, easeExpIn, easeExpOut, interpolateBlues } from 'd3';
+import { interpolateRdYlBu, interpolateYlGnBu, interpolateYlOrRd } from 'd3';
 import { datum } from '../../types/datum';
 
 @Component({
@@ -42,24 +41,18 @@ export class OverviewCellComponent implements OnInit, OnChanges {
         .boot(this.sequence, this.mask)
         .subscribe((result: BootstrapResult) => {
           this.result = result;
-          const rankSumDeviationColor = interpolateBlues(
-            result.deviationMetricDeviationIndex
-          );
-          const missRateDeviationColor = interpolateBlues(
-            result.missRateDeviationIndex
-          );
+          const rankSumDeviationColor =
+            result.deviationMetricDeviationIndex === 0
+              ? '#e5e5e5'
+              : interpolateYlOrRd(result.deviationMetricDeviationIndex);
 
-          const rankSumFinalColor = scaleLinear<string, string>().range([
-            '#dedede',
-            rankSumDeviationColor,
-          ])(easeExpOut(result.progress));
-          const missRateFinalColor = scaleLinear<string, string>().range([
-            '#dedede',
-            missRateDeviationColor,
-          ])(easeExpOut(result.progress));
+          const missRateDeviationColor =
+            result.missRateDeviationIndex === 0
+              ? '#e5e5e5'
+              : interpolateYlOrRd(result.missRateDeviationIndex);
 
-          this.rankSumColor = rankSumFinalColor;
-          this.missRateColor = missRateFinalColor;
+          this.rankSumColor = rankSumDeviationColor;
+          this.missRateColor = missRateDeviationColor;
         });
     }
   }

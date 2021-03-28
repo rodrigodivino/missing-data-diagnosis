@@ -22,7 +22,7 @@ import { ColumnView } from '../interfaces/column-view.interface';
   styleUrls: ['./horizontal-screen.component.scss'],
 })
 export class HorizontalScreenComponent implements OnInit, OnChanges, OnDestroy {
-  public xScale: ScaleBand<string> = scaleBand<string>();
+  public xScale: ScaleBand<string> = scaleBand<string>().padding(0.05);
 
   @Input() data: InputData;
   @Input() mKey: string;
