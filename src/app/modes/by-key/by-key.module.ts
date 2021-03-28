@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VerticalScreenComponent } from './vertical-screen/vertical-screen.component';
+import { ByKeyScreenComponent } from './by-key-screen/by-key-screen.component';
 import { LineComponent } from './line/line.component';
 
 @NgModule({
-  declarations: [VerticalScreenComponent, LineComponent],
+  declarations: [ByKeyScreenComponent, LineComponent],
   imports: [CommonModule],
-  exports: [VerticalScreenComponent],
+  exports: [ByKeyScreenComponent],
 })
 export class ByKeyModule {}

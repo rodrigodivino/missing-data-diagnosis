@@ -10,32 +10,33 @@ import {
 } from '@angular/core';
 import { scaleBand, ScaleBand } from 'd3-scale';
 import { InputData } from '../../../interfaces/InputData';
+import { OverviewCellView } from '../../overview/interfaces/overview-cell-view.interface';
 import { Label } from '../../../interfaces/label.interface';
 import { Subject } from 'rxjs';
-import { OverviewCellView } from '../../overview/interfaces/overview-cell-view.interface';
 import { takeUntil } from 'rxjs/operators';
-import { LineView } from '../interfaces/line-view.interface';
+import { ColumnView } from '../interfaces/column-view.interface';
 
 @Component({
-  selector: 'g[app-vertical-screen]',
-  templateUrl: './vertical-screen.component.html',
-  styleUrls: ['./vertical-screen.component.scss'],
+  selector: 'g[app-by-missing-key-screen]',
+  templateUrl: './by-missing-key-screen.component.html',
+  styleUrls: ['./by-missing-key-screen.component.scss'],
 })
-export class VerticalScreenComponent implements OnInit, OnChanges, OnDestroy {
-  public yScale: ScaleBand<string> = scaleBand<string>().padding(0.05);
+export class ByMissingKeyScreenComponent
+  implements OnInit, OnChanges, OnDestroy {
+  public xScale: ScaleBand<string> = scaleBand<string>();
 
   @Input() data: InputData;
-  @Input() mKeys: string[];
-  @Input() key: string;
+  @Input() mKey: string;
+  @Input() keys: string[];
   @Input() width: number;
   @Input() height: number;
 
   @Output() selectedMKeyChange = new EventEmitter<string>();
   @Output() selectedKeyChange = new EventEmitter<string>();
 
-  mKeyLabels: Label[] = [];
-  keyLabel: Label = null;
-  lines: LineView[];
+  mKeyLabel: Label = null;
+  keyLabels: Label[] = [];
+  columns: ColumnView[];
   private _destroy$ = new Subject<void>();
   private _keyData$ = new Subject<void>();
   private _resize$ = new Subject<void>();
@@ -68,60 +69,60 @@ export class VerticalScreenComponent implements OnInit, OnChanges, OnDestroy {
     return '' + d.text;
   }
 
-  resetKey(): void {
-    this.selectedKeyChange.next(null);
+  resetMKey(): void {
+    this.selectedMKeyChange.next(null);
   }
 
-  selectMKey(keyLabel: Label): void {
-    this.selectedMKeyChange.next(keyLabel.text);
+  selectKey(keyLabel: Label): void {
+    this.selectedKeyChange.next(keyLabel.text);
   }
 
   private populateLabels(): void {
-    this.keyLabel = {
-      text: this.key,
-      x: this.width / 2,
-      y: -5,
+    this.mKeyLabel = {
+      text: this.mKey,
+      x: -5,
+      y: this.height / 2,
     };
 
-    this.mKeyLabels = [];
+    this.keyLabels = [];
 
-    for (const mKey of this.mKeys) {
-      this.mKeyLabels.push({
-        text: mKey,
-        x: -5,
-        y: this.yScale(mKey) + this.yScale.bandwidth() / 2,
+    for (const key of this.keys) {
+      this.keyLabels.push({
+        text: key,
+        x: this.xScale(key) + this.xScale.bandwidth() / 2,
+        y: -5,
       });
     }
   }
 
-  private populateLines(): void {
-    this.lines = [];
-    for (const mKey of this.mKeys) {
-      if (mKey === this.key) {
+  private populateColumns(): void {
+    this.columns = [];
+    for (const key of this.keys) {
+      if (key === this.mKey) {
         continue;
       }
-      this.lines.push({
-        height: this.yScale.bandwidth(),
-        width: this.width,
-        mKey,
-        x: 0,
-        y: this.yScale(mKey),
+      this.columns.push({
+        height: this.height,
+        width: this.xScale.bandwidth(),
+        key,
+        x: this.xScale(key),
+        y: 0,
       });
     }
   }
 
   private initialize(): void {
     this._keyData$.pipe(takeUntil(this._destroy$)).subscribe(() => {
-      this.yScale = this.yScale?.copy().domain(this.mKeys);
+      this.xScale = this.xScale?.copy().domain(this.keys);
 
-      this.populateLines();
+      this.populateColumns();
       this.populateLabels();
     });
 
     this._resize$.pipe(takeUntil(this._destroy$)).subscribe(() => {
-      this.yScale = this.yScale?.copy()?.range([0, this.height]);
+      this.xScale = this.xScale?.copy()?.range([0, this.width]);
 
-      this.populateLines();
+      this.populateColumns();
       this.populateLabels();
     });
 

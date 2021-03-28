@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HorizontalScreenComponent } from './horizontal-screen/horizontal-screen.component';
+import { ByMissingKeyScreenComponent } from './by-missing-key-screen/by-missing-key-screen.component';
 import { ColumnComponent } from './column/column.component';
 
 @NgModule({
-  declarations: [HorizontalScreenComponent, ColumnComponent],
+  declarations: [ByMissingKeyScreenComponent, ColumnComponent],
   imports: [CommonModule],
-  exports: [HorizontalScreenComponent, ColumnComponent],
+  exports: [ByMissingKeyScreenComponent, ColumnComponent],
 })
 export class ByMissingKeyModule {}
